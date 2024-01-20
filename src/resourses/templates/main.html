@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:c="http://www.thymeleaf.org/extras/core">
+<head>
+    <title>Prog.kiev.ua</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h3><img height="50" width="55" th:src="@{/static/logo.png}"/><a th:href="@{/}">Contacts List</a></h3>
+
+        <nav class="navbar navbar-default">
+            <div class="container-fluid">
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul id="groupList" class="nav navbar-nav">
+                        <li><button type="button" id="delete_group" class="btn btn-default navbar-btn"th:data-group-id="${groupId}">Delete Group</button></li>
+                        <li><button type="button" id="upload_contacts" class="btn btn-default navbar-btn">Upload Contacts</button></li>
+                        <li><button type="button" id="save_contacts" class="btn btn-default navbar-btn">Save Contacts</button></li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                               aria-expanded="false">Groups <span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a th:href="@{/}">Default</a></li>
+                                <th:block th:each="group : ${groups}">
+                                    <li><a th:href="@{/group/{groupId}(groupId=${group.id})}" th:text="${group.name}"></a>
+                                    </li>
+                                </th:block>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-2">
+                    <ul id="contactList" class="nav navbar-nav">
+                        <li><button type="button" id="add_contact" class="btn btn-default navbar-btn">Add Contact</button></li>
+                        <li><button type="button" id="add_group" class="btn btn-default navbar-btn">Add Group</button></li>
+                        <li><button type="button" id="delete_contact" class="btn btn-default navbar-btn">Delete Contact</button></li>
+                        <li><button type="button" id="reset" class="btn btn-default navbar-btn">Reset</button></li>
+                    </ul>
+                    <form class="navbar-form navbar-left" role="search" action="/search" method="post">
+                        <div class="form-group">
+                            <input type="text" class="form-control" name="pattern" placeholder="Search">
+                        </div>
+                        <button type="submit" class="btn btn-default">Submit</button>
+                    </form>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <td></td>
+                <td><b>Name</b></td>
+                <td><b>Surname</b></td>
+                <td><b>Phone</b></td>
+                <td><b>E-mail</b></td>
+                <td><b>Group</b></td>
+            </tr>
+            </thead>
+            <th:block th:each="contact : ${contacts}">
+                <tr>
+                    <td><input type="checkbox" name="toDelete[]" th:value="${contact.id}"
+                               th:id="'checkbox_' + ${contact.id}"/></td>
+                    <td th:text="${contact.name}"></td>
+                    <td th:text="${contact.surname}"></td>
+                    <td th:text="${contact.phone}"></td>
+                    <td th:text="${contact.email}"></td>
+                    <td th:utext="${contact.group != null} ? ${contact.group.name} : 'Default'"></td>
+                </tr>
+            </th:block>
+        </table>
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                <th:block th:if="${allPages != null}">
+                    <th:block th:each="i : ${#numbers.sequence(1, allPages)}">
+                        <li><a th:href="@{/(page=${i-1})}" th:text="${i}"></a></li>
+                    </th:block>
+                </th:block>
+
+                <th:block th:if="${byGroupPages != null}">
+                    <th:block th:each="i : ${#numbers.sequence(1, byGroupPages)}">
+                        <li><a th:href="@{/group/{groupId}(groupId=${groupId},page=${i-1})}" th:text="${i}"></a></li>
+                    </th:block>
+                </th:block>
+            </ul>
+        </nav>
+    </div>
+
+    <script>
+        $('.dropdown-toggle').dropdown();
+
+        $('#add_contact').click(function(){
+            window.location.href='/contact_add_page';
+        });
+
+        $('#add_group').click(function(){
+            window.location.href='/group_add_page';
+        });
+
+        $('#reset').click(function(){
+            window.location.href='/reset';
+        });
+
+        $('#delete_contact').click(function(){
+            var data = { 'toDelete[]' : []};
+            $(":checked").each(function() {
+                data['toDelete[]'].push($(this).val());
+            });
+            $.post("/contact/delete", data, function(data, status) {
+                window.location.reload();
+            });
+        });
+        $('#delete_group').click(function () {
+            var groupId = $(this).attr('data-group-id');
+            $.post("/delete_group", {groupId: groupId}, function (data, status) {
+                window.location.href = "/";
+            });
+        });
+        $('#save_contacts').click(function () {
+            window.location.href = '/save_contacts';
+        });
+        $('#upload_contacts').click(function () {
+            window.location.href = '/upload_contacts';
+        });
+    </script>
+</body>
+</html>
